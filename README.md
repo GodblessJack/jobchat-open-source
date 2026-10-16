@@ -1,7 +1,8 @@
 <div align="center">
-  <img src="landing/src/assets/logo.png" alt="JobChat" width="220" />
-  <h1>Get Jobs Done. All of Them.</h1>
-  <p><strong>A self-hosted workspace for building and collaborating with a dedicated team of AI contacts.</strong></p>
+  <img src="landing/src/assets/logo.png" alt="JobChat" width="180" />
+  <h1>JobChat</h1>
+  <p><strong>A self-hosted workspace for your AI team.</strong></p>
+  <p>Create specialized AI contacts, collaborate in direct or group chats, and talk with them over realtime calls.</p>
 
   <p>
     <a href="https://github.com/GodblessJack/jobchat-open-source/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="Apache-2.0 license" /></a>
@@ -9,73 +10,43 @@
     <img src="https://img.shields.io/badge/PostgreSQL-16%20%2B%20pgvector-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 16 with pgvector" />
     <a href="https://github.com/GodblessJack/jobchat-open-source/actions/workflows/ci.yml"><img src="https://github.com/GodblessJack/jobchat-open-source/actions/workflows/ci.yml/badge.svg" alt="CI status" /></a>
   </p>
-  <p>English | <a href="README.zh-CN.md">简体中文</a> | <a href="https://jobchat.io">Website</a></p>
+  <p><a href="https://jobchat.io">Website</a> · <a href="docs/ARCHITECTURE.md">Architecture</a> · <a href="docs/CONFIGURATION.md">Configuration</a> · <a href="CONTRIBUTING.md">Contributing</a> · <a href="README.zh-CN.md">简体中文</a></p>
 </div>
 
-## Overview
+![JobChat direct conversation and contact profile](docs/assets/contacts-chat.webp)
 
-JobChat lets you create AI contacts with distinct roles, knowledge, and capabilities, then work with them through direct messages, group conversations, and realtime calls. The application includes the chat runtime, landing page, call interface, local authentication, PostgreSQL persistence, vector memory, and a production gateway.
+## Why JobChat?
 
-The open-source edition is self-contained: it does not require a global Claude Code installation, a legacy chat project, or a hosted Supabase project for its core local workflow.
+JobChat gives each AI contact a distinct role, instructions, and reusable capabilities, then makes them available in one familiar collaboration interface. You can keep conversations and data on your own infrastructure instead of relying on a hosted workspace.
 
-![JobChat contact conversation](docs/assets/contacts-chat.webp)
-
-<details>
-  <summary>View the landing page</summary>
-  <br />
-  <img src="docs/assets/landing.webp" alt="JobChat landing page" width="900" />
-</details>
+This repository contains the complete core workflow: chat and call clients, backend services, local authentication, PostgreSQL persistence, vector memory, database migrations, and production packaging. It does not require a global Claude Code installation or a hosted Supabase project.
 
 ## Features
 
-- **Configurable AI contacts** — combine a role, identity, instructions, and capability packs.
-- **Direct and group conversations** — realtime messaging, mentions, attachments, and conversation history.
-- **Realtime calls** — browser-based audio/video interaction with transcript persistence.
-- **Persistent memory** — PostgreSQL and pgvector-powered recall with optional embedding providers.
-- **Local-first authentication** — username/password login with access and refresh tokens.
-- **Self-hosted runtime** — Claude Agent SDK bundled as an npm dependency, with isolated session workspaces.
-- **Production gateway** — one entry point for the landing page, chat, calls, API, and WebSocket traffic.
+- **Specialized AI contacts** — define roles, instructions, and capability packs for different kinds of work.
+- **Direct and group chats** — realtime messages, mentions, attachments, and persistent conversation history.
+- **Realtime calls** — browser-based audio/video calls with transcripts saved back to the conversation.
+- **Long-term memory** — recall relevant context with PostgreSQL and pgvector.
+- **Self-hosted by default** — local accounts, isolated runtime workspaces, and no required hosted control plane.
+- **One production entry point** — serve the web apps and proxy API, file, and WebSocket traffic through the gateway.
 
-## Architecture
-
-```mermaid
-flowchart LR
-  U[Browser] --> L[Landing :5274]
-  U --> C[Chat client :5273]
-  U --> M[Call client :5180]
-  C --> S[JobChat server :5272]
-  M --> S
-  S --> D[(PostgreSQL 16 + pgvector)]
-  S --> R[Isolated runtime workspaces]
-  R --> P[Configured model providers]
-```
-
-In production, `gateway.js` serves the built applications on port 3000 and proxies API and WebSocket traffic to the JobChat server. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for process boundaries and data-flow details.
-
-## Repository layout
-
-```text
-.
-├── jchat/                 # Chat client, server, database schema, and tests
-├── meeting/               # Realtime call client
-├── landing/               # Public landing page and brand assets
-├── docs/                  # Architecture, configuration, and release assets
-├── licenses/              # Third-party license texts
-├── gateway.js             # Production static server and reverse proxy
-├── docker-compose.yml     # Local PostgreSQL + pgvector service
-└── .github/               # CI, dependency updates, and contribution templates
-```
+<details>
+  <summary><strong>View the landing page</strong></summary>
+  <br />
+  <img src="docs/assets/landing.webp" alt="JobChat landing page" width="900" />
+</details>
 
 ## Quick start
 
 ### Prerequisites
 
 - Node.js 22+ and npm 10+
-- Docker with Compose v2, or an existing PostgreSQL 16+ instance with pgvector
+- Docker with Compose v2, or PostgreSQL 16+ with pgvector
 - An Anthropic API key for contact replies
-- Optional: OpenAI, Google GenAI, Qwen, and Slack credentials for their respective integrations
 
-### 1. Install dependencies
+OpenAI, Google GenAI, Qwen, and Slack credentials are optional and only needed for their respective integrations.
+
+### 1. Clone and install
 
 ```bash
 git clone https://github.com/GodblessJack/jobchat-open-source.git
@@ -87,7 +58,7 @@ npm --prefix meeting ci
 npm --prefix landing ci
 ```
 
-### 2. Create local configuration
+### 2. Configure the local environment
 
 ```bash
 cp .env.example .env
@@ -96,26 +67,26 @@ cp landing/.env.example landing/.env
 cp meeting/.env.example meeting/.env
 ```
 
-Edit `.env` and `jchat/.env`:
+Update `.env` and `jchat/.env`:
 
-1. Set the same local database password in `POSTGRES_PASSWORD` and `DATABASE_URL`.
+1. Use the same database password in `POSTGRES_PASSWORD` and `DATABASE_URL`.
 2. Set `ANTHROPIC_API_KEY`.
 3. Generate two different JWT secrets with `openssl rand -hex 64`.
-4. Set `JCHAT_LOCAL_PASSWORD` to at least 12 characters for the local development account.
-5. Keep `JCHAT_SESSIONS_ROOT` and `FILES_ROOT` at absolute paths outside the repository. Create them with permissions suitable for your user, or change them to another external absolute path.
+4. Set a `JCHAT_LOCAL_PASSWORD` of at least 12 characters.
+5. Keep `JCHAT_SESSIONS_ROOT` and `FILES_ROOT` at writable absolute paths **outside the repository**.
 
-See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for every setting and browser-key safety notes.
+See the [configuration guide](docs/CONFIGURATION.md) for all settings and optional providers.
 
-### 3. Start and initialize PostgreSQL
+### 3. Initialize the database
 
 ```bash
 npm run db:up
 npm --prefix jchat run bootstrap
 ```
 
-`bootstrap` applies the current schema, creates or updates the local account from `JCHAT_LOCAL_USERNAME`, and seeds three example contacts. It is safe to run again; completed migrations are skipped.
+The bootstrap command applies migrations, creates or updates the local account, and installs three example contacts. It is safe to run again.
 
-### 4. Start the development stack
+### 4. Start JobChat
 
 ```bash
 npm run dev
@@ -123,34 +94,30 @@ npm run dev
 
 | Application | URL |
 | --- | --- |
-| Landing page | http://localhost:5274/ |
 | Chat | http://localhost:5273/chat |
+| Landing page | http://localhost:5274/ |
 | Call client | http://localhost:5180/call/ |
-| API health | http://localhost:5272/health |
+| API health check | http://localhost:5272/health |
 
-Sign in with `admin` unless you changed `JCHAT_LOCAL_USERNAME`, using the development password you configured.
+Sign in as `admin`, or the username configured in `JCHAT_LOCAL_USERNAME`, with your local development password.
 
-## Production
+## Run in production
 
-Build all applications:
+Build all applications, then start the server and gateway as separate processes:
 
 ```bash
 npm run build
-```
 
-Start the compiled server and gateway in separate processes:
-
-```bash
-# Process 1
+# Process 1: API and realtime services
 npm --prefix jchat start
 
-# Process 2
+# Process 2: web applications and gateway on port 3000
 npm start
 ```
 
-The gateway listens on `http://localhost:3000/`. Configure production values in the module `.env` files before building, and run the server with `NODE_ENV=production`.
+Set production values in the module environment files before building, and run the server with `NODE_ENV=production`.
 
-### Container image
+### Docker
 
 ```bash
 docker build -t jobchat:0.1.0 .
@@ -162,45 +129,86 @@ docker run --rm \
   jobchat:0.1.0
 ```
 
-Use a `DATABASE_URL` reachable from inside the container. The image runs as the unprivileged `node` user and starts both the compiled server and gateway. Before redistributing a prebuilt image, review the proprietary runtime terms in `docs/RUNTIME_TERMS.md`.
+The container starts both the compiled server and the gateway as the unprivileged `node` user. Use a `DATABASE_URL` reachable from inside the container. Review the [runtime terms](docs/RUNTIME_TERMS.md) before distributing a prebuilt image.
 
-## Verification
+## Architecture
+
+```text
+Browser
+   │
+   ├── Landing / Chat / Calls
+   │
+   ▼
+Production gateway :3000
+   │
+   ▼
+JobChat server :5272 ─── PostgreSQL 16 + pgvector
+   │                  └── Local authentication and storage
+   └── Isolated runtime workspaces ─── Configured model providers
+```
+
+In development, the web clients run on their own Vite servers. In production, `gateway.js` serves the built applications and proxies API, file, and WebSocket traffic. See [the architecture guide](docs/ARCHITECTURE.md) for process boundaries and data flow.
+
+<details>
+  <summary><strong>Repository layout</strong></summary>
+
+```text
+.
+├── jchat/                 # Chat client, server, database schema, and tests
+├── meeting/               # Realtime call client
+├── landing/               # Public landing page and brand assets
+├── docs/                  # Guides and product screenshots
+├── licenses/              # Third-party license texts
+├── gateway.js             # Production static server and reverse proxy
+├── docker-compose.yml     # Local PostgreSQL + pgvector service
+└── .github/               # CI, dependency updates, and community templates
+```
+
+</details>
+
+## Documentation
+
+| Guide | Purpose |
+| --- | --- |
+| [Architecture](docs/ARCHITECTURE.md) | Processes, data flow, and runtime boundaries |
+| [Configuration](docs/CONFIGURATION.md) | Environment variables and provider settings |
+| [Security audit](docs/SECURITY_AUDIT.md) | Release security checks and dependency policy |
+| [Runtime terms](docs/RUNTIME_TERMS.md) | Proprietary Claude Agent SDK usage and distribution terms |
+| [Contributing](CONTRIBUTING.md) | Development and pull-request workflow |
+| [Changelog](CHANGELOG.md) | Release history |
+
+## Development checks
 
 ```bash
 npm run typecheck
 npm test
 npm run lint
 npm run build
+npm run audit
 ```
 
-The default test suite uses deterministic test-only configuration and does not call hosted model APIs. To run the real SDK integration test explicitly:
+The default test suite uses test-only configuration and does not call hosted model APIs. The live SDK integration test is opt-in:
 
 ```bash
 RUN_SDK_INTEGRATION=1 npm --prefix jchat test -- tests/integration/sdk-pipeline.test.ts
 ```
 
-Only do this with a valid provider credential and an understanding of the associated API usage.
+Only enable it with a valid provider credential and an understanding of the associated API usage.
 
-## Security and privacy
+## Security
 
-- Never commit real `.env` files, session workspaces, uploads, or database dumps.
-- Restrict browser-side model keys by HTTP referrer and API scope.
-- Use independent random JWT secrets and rotate any credential that may have been exposed.
-- Keep runtime workspaces outside the source tree to prevent development-only files from entering the runtime.
-- Review [SECURITY.md](SECURITY.md) before reporting a vulnerability or deploying a public instance.
+Do not commit real `.env` files, credentials, session workspaces, uploads, or database dumps. Keep runtime data outside the source tree, use independent JWT secrets, and restrict any browser-side provider keys by referrer and API scope.
+
+Please report vulnerabilities privately through the process in [SECURITY.md](SECURITY.md).
 
 ## Contributing
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community expectations. Changes to behavior should include tests and documentation.
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md) before opening a pull request. Behavioral changes should include tests and documentation.
 
-## Third-party notices and license
+## License and notices
 
-JobChat is licensed under [Apache License 2.0](LICENSE). Third-party components, source locations, modifications, and media attributions are documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), with additional license texts in [`licenses/`](licenses/).
+JobChat is licensed under [Apache License 2.0](LICENSE). Third-party components and media are credited in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), with additional license texts in [`licenses/`](licenses/).
 
-The Claude Agent SDK and bundled Claude Code binary are proprietary Anthropic dependencies, not Apache-licensed JobChat code. Their use, authentication, billing, distribution, and anti-resale requirements are described in [docs/RUNTIME_TERMS.md](docs/RUNTIME_TERMS.md). Review those terms before offering a hosted service or distributing a prebuilt image.
+The Claude Agent SDK and its bundled binary are proprietary Anthropic dependencies, not Apache-licensed JobChat code. Review [docs/RUNTIME_TERMS.md](docs/RUNTIME_TERMS.md) before offering a hosted service or distributing a prebuilt image.
 
-Built-in contacts that reference public figures are fictional simulations for software demonstration. They are not affiliated with, endorsed by, or speaking for those individuals.
-
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for release history.
+Built-in contacts based on public figures are fictional demonstrations. They are not affiliated with, endorsed by, or speaking for those individuals.
