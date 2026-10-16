@@ -1,0 +1,9 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
+
+@layer props {
+  :root {
+    --radius: 0.5rem;
+  }
+}

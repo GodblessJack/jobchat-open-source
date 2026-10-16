@@ -1,0 +1,8 @@
+{
+  "name": "gemini-deep-research-scripts",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@google/genai": "^1.35.0"
+  }
+}

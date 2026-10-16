@@ -1,0 +1,8 @@
+{
+  "name": "gemini-chat-scripts",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@google/genai": "^1.35.0"
+  }
+}
