@@ -6,8 +6,6 @@
 
   <p>
     <a href="https://github.com/GodblessJack/jobchat-open-source/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="Apache-2.0 license" /></a>
-    <img src="https://img.shields.io/badge/node-%3E%3D22-339933?logo=node.js&logoColor=white" alt="Node.js 22+" />
-    <img src="https://img.shields.io/badge/PostgreSQL-16%20%2B%20pgvector-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 16 with pgvector" />
     <a href="https://github.com/GodblessJack/jobchat-open-source/actions/workflows/ci.yml"><img src="https://github.com/GodblessJack/jobchat-open-source/actions/workflows/ci.yml/badge.svg" alt="CI status" /></a>
   </p>
   <p><a href="https://jobchat.io">Website</a> · <a href="docs/ARCHITECTURE.md">Architecture</a> · <a href="docs/CONFIGURATION.md">Configuration</a> · <a href="CONTRIBUTING.md">Contributing</a> · <a href="README.zh-CN.md">简体中文</a></p>
@@ -17,18 +15,17 @@
 
 ## Why JobChat?
 
-JobChat gives each AI contact a distinct role, instructions, and reusable capabilities, then makes them available in one familiar collaboration interface. You can keep conversations and data on your own infrastructure instead of relying on a hosted workspace.
+JobChat gives each AI contact a distinct role, instructions, and reusable capabilities, then brings them together in one familiar collaboration interface. You can keep conversations and data on your own infrastructure instead of relying on a hosted workspace.
 
-This repository contains the complete core workflow: chat and call clients, backend services, local authentication, PostgreSQL persistence, vector memory, database migrations, and production packaging. It does not require a global Claude Code installation or a hosted Supabase project.
+The repository includes the complete core workflow, from chat and calls to persistent conversations and long-term memory.
 
 ## Features
 
 - **Specialized AI contacts** — define roles, instructions, and capability packs for different kinds of work.
-- **Direct and group chats** — realtime messages, mentions, attachments, and persistent conversation history.
-- **Realtime calls** — browser-based audio/video calls with transcripts saved back to the conversation.
-- **Long-term memory** — recall relevant context with PostgreSQL and pgvector.
-- **Self-hosted by default** — local accounts, isolated runtime workspaces, and no required hosted control plane.
-- **One production entry point** — serve the web apps and proxy API, file, and WebSocket traffic through the gateway.
+- **Direct and group chats** — exchange realtime messages, mentions, and attachments with persistent history.
+- **Realtime calls** — talk with contacts over audio or video and save transcripts back to the conversation.
+- **Long-term memory** — recall relevant context across conversations.
+- **Self-hosted by default** — keep accounts, conversations, and data under your control.
 
 <details>
   <summary><strong>View the landing page</strong></summary>
@@ -38,13 +35,7 @@ This repository contains the complete core workflow: chat and call clients, back
 
 ## Quick start
 
-### Prerequisites
-
-- Node.js 22+ and npm 10+
-- Docker with Compose v2, or PostgreSQL 16+ with pgvector
-- An Anthropic API key for contact replies
-
-OpenAI, Google GenAI, Qwen, and Slack credentials are optional and only needed for their respective integrations.
+You will need Node.js 22+, npm 10+, Docker with Compose v2 or PostgreSQL 16+ with pgvector, and a supported model provider key.
 
 ### 1. Clone and install
 
@@ -58,7 +49,7 @@ npm --prefix meeting ci
 npm --prefix landing ci
 ```
 
-### 2. Configure the local environment
+### 2. Configure JobChat
 
 ```bash
 cp .env.example .env
@@ -67,104 +58,27 @@ cp landing/.env.example landing/.env
 cp meeting/.env.example meeting/.env
 ```
 
-Update `.env` and `jchat/.env`:
+Follow the [configuration guide](docs/CONFIGURATION.md) to set the required database, model provider, and local account options. Optional integrations can be configured later.
 
-1. Use the same database password in `POSTGRES_PASSWORD` and `DATABASE_URL`.
-2. Set `ANTHROPIC_API_KEY`.
-3. Generate two different JWT secrets with `openssl rand -hex 64`.
-4. Set a `JCHAT_LOCAL_PASSWORD` of at least 12 characters.
-5. Keep `JCHAT_SESSIONS_ROOT` and `FILES_ROOT` at writable absolute paths **outside the repository**.
-
-See the [configuration guide](docs/CONFIGURATION.md) for all settings and optional providers.
-
-### 3. Initialize the database
+### 3. Initialize and start
 
 ```bash
 npm run db:up
 npm --prefix jchat run bootstrap
-```
-
-The bootstrap command applies migrations, creates or updates the local account, and installs three example contacts. It is safe to run again.
-
-### 4. Start JobChat
-
-```bash
 npm run dev
 ```
 
-| Application | URL |
-| --- | --- |
-| Chat | http://localhost:5273/chat |
-| Landing page | http://localhost:5274/ |
-| Call client | http://localhost:5180/call/ |
-| API health check | http://localhost:5272/health |
+The bootstrap command prepares the database and your local account. Once startup is complete, sign in with the account you configured.
 
-Sign in as `admin`, or the username configured in `JCHAT_LOCAL_USERNAME`, with your local development password.
+## Deployment
 
-## Run in production
+JobChat supports self-hosted production deployments and Docker. Run `npm run build` to build the applications, then follow the [configuration guide](docs/CONFIGURATION.md) and [architecture guide](docs/ARCHITECTURE.md) for production setup.
 
-Build all applications, then start the server and gateway as separate processes:
-
-```bash
-npm run build
-
-# Process 1: API and realtime services
-npm --prefix jchat start
-
-# Process 2: web applications and gateway on port 3000
-npm start
-```
-
-Set production values in the module environment files before building, and run the server with `NODE_ENV=production`.
-
-### Docker
-
-```bash
-docker build -t jobchat:0.1.0 .
-docker run --rm \
-  -p 3000:3000 -p 5272:5272 \
-  --env-file jchat/.env \
-  -v jobchat-sessions:/data/jchat-sessions \
-  -v jobchat-files:/data/jobchat/files \
-  jobchat:0.1.0
-```
-
-The container starts both the compiled server and the gateway as the unprivileged `node` user. Use a `DATABASE_URL` reachable from inside the container. Review the [runtime terms](docs/RUNTIME_TERMS.md) before distributing a prebuilt image.
+Review the [runtime terms](docs/RUNTIME_TERMS.md) before offering a hosted service or distributing a prebuilt image.
 
 ## Architecture
 
-```text
-Browser
-   │
-   ├── Landing / Chat / Calls
-   │
-   ▼
-Production gateway :3000
-   │
-   ▼
-JobChat server :5272 ─── PostgreSQL 16 + pgvector
-   │                  └── Local authentication and storage
-   └── Isolated runtime workspaces ─── Configured model providers
-```
-
-In development, the web clients run on their own Vite servers. In production, `gateway.js` serves the built applications and proxies API, file, and WebSocket traffic. See [the architecture guide](docs/ARCHITECTURE.md) for process boundaries and data flow.
-
-<details>
-  <summary><strong>Repository layout</strong></summary>
-
-```text
-.
-├── jchat/                 # Chat client, server, database schema, and tests
-├── meeting/               # Realtime call client
-├── landing/               # Public landing page and brand assets
-├── docs/                  # Guides and product screenshots
-├── licenses/              # Third-party license texts
-├── gateway.js             # Production static server and reverse proxy
-├── docker-compose.yml     # Local PostgreSQL + pgvector service
-└── .github/               # CI, dependency updates, and community templates
-```
-
-</details>
+JobChat combines web-based chat and calls, backend services, persistent data, and isolated runtime workspaces in one self-hosted system. See the [architecture guide](docs/ARCHITECTURE.md) for process boundaries and data flow.
 
 ## Documentation
 
@@ -177,33 +91,13 @@ In development, the web clients run on their own Vite servers. In production, `g
 | [Contributing](CONTRIBUTING.md) | Development and pull-request workflow |
 | [Changelog](CHANGELOG.md) | Release history |
 
-## Development checks
-
-```bash
-npm run typecheck
-npm test
-npm run lint
-npm run build
-npm run audit
-```
-
-The default test suite uses test-only configuration and does not call hosted model APIs. The live SDK integration test is opt-in:
-
-```bash
-RUN_SDK_INTEGRATION=1 npm --prefix jchat test -- tests/integration/sdk-pipeline.test.ts
-```
-
-Only enable it with a valid provider credential and an understanding of the associated API usage.
-
 ## Security
 
-Do not commit real `.env` files, credentials, session workspaces, uploads, or database dumps. Keep runtime data outside the source tree, use independent JWT secrets, and restrict any browser-side provider keys by referrer and API scope.
-
-Please report vulnerabilities privately through the process in [SECURITY.md](SECURITY.md).
+Do not commit real environment files, credentials, runtime data, uploads, or database dumps. Please report vulnerabilities privately through the process in [SECURITY.md](SECURITY.md).
 
 ## Contributing
 
-Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md) before opening a pull request. Behavioral changes should include tests and documentation.
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md) before opening a pull request.
 
 ## License and notices
 
