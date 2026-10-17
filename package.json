@@ -1,0 +1,26 @@
+{
+  "name": "jobchat",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An open-source workspace for building and collaborating with AI contacts",
+  "license": "Apache-2.0",
+  "main": "gateway.js",
+  "scripts": {
+    "dev": "npm --prefix jchat run dev",
+    "build": "npm --prefix jchat run build",
+    "start": "node gateway.js",
+    "test": "npm --prefix jchat test",
+    "lint": "npm --prefix jchat run lint",
+    "typecheck": "npm --prefix jchat run typecheck",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "audit": "node scripts/audit-dependencies.mjs"
+  },
+  "dependencies": {
+    "express": "^4.22.1",
+    "http-proxy": "^1.18.1"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

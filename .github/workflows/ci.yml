@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Install, test, build, and audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            jchat/package-lock.json
+            meeting/package-lock.json
+            landing/package-lock.json
+      - name: Install locked dependencies
+        run: |
+          npm ci
+          npm --prefix jchat ci
+          npm --prefix meeting ci
+          npm --prefix landing ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Test
+        run: npm test
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        run: npm run build
+      - name: Dependency security audit
+        run: npm run audit
+
+  licenses:
+    name: Third-party license policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            jchat/package-lock.json
+            meeting/package-lock.json
+            landing/package-lock.json
+      - name: Install locked dependencies
+        run: |
+          npm ci
+          npm --prefix jchat ci
+          npm --prefix meeting ci
+          npm --prefix landing ci
+      - name: Check gateway licenses
+        run: >-
+          npx --yes license-checker --start . --production --excludePrivatePackages
+          --failOn 'GPL;AGPL;LGPL;SSPL;BUSL;UNKNOWN;UNLICENSED;Custom' --summary
+      - name: Check jchat licenses
+        run: >-
+          npx --yes license-checker --start jchat --production --excludePrivatePackages
+          --excludePackages '@anthropic-ai/claude-agent-sdk@0.2.141;@anthropic-ai/claude-agent-sdk-linux-x64@0.2.141;@anthropic-ai/claude-agent-sdk-linux-x64-musl@0.2.141'
+          --failOn 'GPL;AGPL;LGPL;SSPL;BUSL;UNKNOWN;UNLICENSED;Custom' --summary
+      - name: Check meeting licenses
+        run: >-
+          npx --yes license-checker --start meeting --production --excludePrivatePackages
+          --failOn 'GPL;AGPL;LGPL;SSPL;BUSL;UNKNOWN;UNLICENSED;Custom' --summary
+      - name: Check landing licenses
+        run: >-
+          npx --yes license-checker --start landing --production --excludePrivatePackages
+          --failOn 'GPL;AGPL;LGPL;SSPL;BUSL;UNKNOWN;UNLICENSED;Custom' --summary
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

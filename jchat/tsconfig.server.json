@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noUnusedLocals": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "dist/server",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@shared/*": ["shared/*"]
+    },
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["server", "shared", "tests/unit/server", "tests/integration", "tests/setup.ts"],
+  "exclude": ["node_modules", "src", "dist", "server/skills"]
+}

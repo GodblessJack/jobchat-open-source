@@ -1,0 +1,42 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Dependencies and generated output
+node_modules/
+dist/
+build/
+coverage/
+.parcel-cache/
+.vite/
+.playwright/
+playwright-report/
+test-results/
+*.tsbuildinfo
+*.log
+
+# Local runtime data
+.data/
+sessions/
+uploads/
+
+# Local tooling
+.claude/
+.codex/
+.agents/
+.gstack/
+.superpowers/
+.obsidian/
+.DS_Store
+.vscode/
+.idea/
+
+# Generated skill artifacts
+*.pdf
+jchat/server/skills/*/working/fonts/
+
+# Generated TypeScript configuration output
+landing/vite.config.js
+landing/vite.config.d.ts
