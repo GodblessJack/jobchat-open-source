@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@google/genai": "^1.35.0"
+    "@google/genai": "^2.30.0"
   }
 }
